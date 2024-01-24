@@ -1,0 +1,35 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  image: registry.etipi.pi.gov.br/ubuntu:22.04
+  only:
+    refs:
+        - main
+  when: manual
+  before_script:
+    - echo "[CI] Instalando deps..."
+    - apt-get update -qq && apt-get install openssh-client sshpass -y > /dev/null
+
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - chmod 400 ${SSH_PRIVATE_KEY}
+    - echo "${SERVER_IP}" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - eval $(ssh-agent -s) > /dev/null
+    - sshpass -e ssh-add ${SSH_PRIVATE_KEY} > /dev/null
+
+  script:
+    - echo "[CI] Buildando aplicação..."
+    - ssh -i ${SSH_PRIVATE_KEY} -o "StrictHostKeyChecking=no" ${SSH_USER}@${SERVER_IP} \
+      "
+        echo \"y\" | docker builder prune;
+        echo \"y\" | docker image prune;
+        cd web-avalie;
+        git pull;
+        docker compose up --build -d
+      "
+  after_script:
+    - echo "[CI] Deploy finalizado..."
+

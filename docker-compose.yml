@@ -1,0 +1,32 @@
+version: "3"
+
+services:
+  avalie-nextjs:
+    container_name: avalie-nextjs
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    networks:
+      - web-net
+  avalie-nginx:
+    container_name: avalie-nginx
+    image: jonasal/nginx-certbot:4.3.0
+    restart: unless-stopped
+    env_file:
+      - ./nginx-certbot.env
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx:/etc/nginx/user_conf.d
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    networks:
+      - web-net
+
+networks:
+  web-net:
+    driver: bridge

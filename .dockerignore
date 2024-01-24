@@ -1,0 +1,9 @@
+certbot
+nginx
+node_modules
+Dockerfile
+.dockerignore
+npm-debug.log
+README.md
+.next
+.git
